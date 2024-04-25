@@ -10,7 +10,7 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Figma clone",
+  title: "FigPro",
   description: "minimalist figma clone",
 };
 

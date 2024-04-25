@@ -4,8 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import CursorChat from "./cursor/CursorChat";
 import { CursorMode, CursorState, Reaction } from "@/types/type";
 import ReactionSelector from "./reaction/ReactionButton";
+import FlyingReaction from "./reaction/FlyingReaction";
+import { Timestamp } from "@liveblocks/react-comments/primitives";
+import { Props } from "next/script";
 
-const Live = () => {
+type Props = {
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+}
+
+const Live = ({ canvasRef }: Props) => {
   const others = useOthers();
   const [{cursor}, updateMyPresence] = useMyPresence()as any;
 
@@ -82,15 +89,27 @@ const Live = () => {
 
   return (
     <div
+      id="canvas"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
-      className="h-[100vh] w-full flex justify-center items-center text-cente"
+      className="h-[100vh] w-full flex justify-center items-center text-center"
       
     >
-      <h1 className="text-2xl text-white">my figma clone</h1>
-      {cursor && (
+      <canvas ref={canvasRef}/>
+      
+      {reaction.map((r) => (
+          <FlyingReaction
+            key={r.timestamp.toString()}
+            x={r.point.x}
+            y={r.point.y}
+            timestamp={r.timestamp}
+            value={r.value}
+          />
+        ))}
+
+        {cursor &&(
         <CursorChat
            cursor={cursor}
            cursorState={cursorState}
@@ -98,6 +117,8 @@ const Live = () => {
            updateMyPresence={updateMyPresence}
         />
       )}
+
+
 
       {cursorState.mode === CursorMode.ReactionSelector && (
         <ReactionSelector
