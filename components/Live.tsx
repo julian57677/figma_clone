@@ -7,12 +7,24 @@ import ReactionSelector from "./reaction/ReactionButton";
 import FlyingReaction from "./reaction/FlyingReaction";
 import { Timestamp } from "@liveblocks/react-comments/primitives";
 import { Props } from "next/script";
+import { Comments } from "./comments/Comments";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+import { shortcuts } from "@/constants";
+import { Item } from "@radix-ui/react-dropdown-menu";
+
 
 type Props = {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  undo: () => void;
+  redo: () => void;
 }
 
-const Live = ({ canvasRef }: Props) => {
+const Live = ({ canvasRef, undo, redo}: Props) => {
   const others = useOthers();
   const [{cursor}, updateMyPresence] = useMyPresence()as any;
 
@@ -20,7 +32,8 @@ const Live = ({ canvasRef }: Props) => {
     mode: CursorMode.Hidden,
   })
 
-  const [reaction, setReaction] = useState<Reaction[]>([]);
+  const [reaction, setReactions] = useState<Reaction[]>([]);
+  
 
   const handlePointerMove = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
@@ -87,8 +100,36 @@ const Live = ({ canvasRef }: Props) => {
     }
   }, [updateMyPresence]);
 
+  const setReaction = useCallback((reaction: string) => {
+    setCursorState({ mode: CursorMode.Reaction, reaction, isPressed: false });
+  }, []);
+
+  const handleContextMenuClick = useCallback((key: string) => {
+    switch(key){
+      case "chat":
+        setCursorState({
+          mode: CursorMode.Chat,
+          previousMessage: null,
+          message: "",
+        });
+        break;
+      
+      case "Reactions":
+        setCursorState({mode: CursorMode.ReactionSelector});
+        break;
+
+      case "Undo":
+        undo();
+        break;
+
+      default:
+        break;
+    }
+  }, [])
+
   return (
-    <div
+    <ContextMenu>
+    <ContextMenuTrigger
       id="canvas"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
@@ -129,7 +170,21 @@ const Live = ({ canvasRef }: Props) => {
       )}
 
       <LiveCursors others={others} />
-    </div>
+     
+    </ContextMenuTrigger>
+
+    <ContextMenuContent className="right-menu-content">
+      {shortcuts.map((item) => (
+        <ContextMenuItem key={item.key} onClick={() => handleContextMenuClick(item.name)} className="right-menu-item">
+      
+        <p>{item.name}</p>
+        <p className="text-xs text-primary-grey-300">{item.shortcut}</p>
+        </ContextMenuItem>
+      ))}
+
+    </ContextMenuContent>
+
+    </ContextMenu>
   )
 }
 
