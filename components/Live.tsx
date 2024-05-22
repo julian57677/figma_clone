@@ -1,4 +1,4 @@
-import { useMyPresence, useOthers } from "@/liveblocks.config"
+import { useEventListener, useMyPresence, useOthers } from "@/liveblocks.config"
 import LiveCursors from "./cursor/LiveCursors"
 import { useCallback, useEffect, useState } from "react";
 import CursorChat from "./cursor/CursorChat";
@@ -26,7 +26,7 @@ type Props = {
 
 const Live = ({ canvasRef, undo, redo}: Props) => {
   const others = useOthers();
-  const [{cursor}, updateMyPresence] = useMyPresence()as any;
+  const [{cursor}, updateMyPresence] = useMyPresence();
 
   const [cursorState, setCursorState] = useState<CursorState>({
     mode: CursorMode.Hidden,
@@ -69,6 +69,19 @@ const Live = ({ canvasRef, undo, redo}: Props) => {
       cursorState.mode === CursorMode.Reaction ? { ...state, isPressed: false } : state
     );
   }, [cursorState.mode, setCursorState]);
+
+  useEventListener((eventData) => {
+    const event = eventData.event
+    setReactions((reactions) =>
+      reactions.concat([
+        {
+          point: { x: event.x, y: event.y },
+          value: event.value,
+          timestamp: Date.now(),
+        },
+      ])
+    );
+  });
 
   useEffect(() => {
     const onKeyUp = (e: KeyboardEvent) => {
@@ -169,7 +182,7 @@ const Live = ({ canvasRef, undo, redo}: Props) => {
         />
       )}
 
-      <LiveCursors others={others} />
+      <LiveCursors />
      
     </ContextMenuTrigger>
 
